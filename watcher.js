@@ -91,8 +91,16 @@ async function luxiDataTracking() {
     try {
       const sequence =
         JSON.parse(localStorage.getItem(STORAGE_KEYS.SEQUENCE)) || [];
-      sequence.push(window.location.href);
-      localStorage.setItem(STORAGE_KEYS.SEQUENCE, JSON.stringify(sequence));
+
+      const currentUrl = windoiw.location.href;
+
+      if (
+        sequence.length === 0 ||
+        sequence[sequence.length - 1] !== currentUrl
+      ) {
+        sequence.push(currentUrl);
+        localStorage.setItem(STORAGE_KEYS.SEQUENCE, JSON.stringify(sequence));
+      }
     } catch (error) {}
   }
 
@@ -242,6 +250,7 @@ async function luxiDataTracking() {
     }
   }
 
+  luxiUpdatePageSequence();
   window.addEventListener("DOMContentLoaded", luxiUpdatePageSequence);
 
   document.addEventListener("mouseout", async (event) => {
