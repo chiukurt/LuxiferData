@@ -92,7 +92,7 @@ async function luxiDataTracking() {
       const sequence =
         JSON.parse(localStorage.getItem(STORAGE_KEYS.SEQUENCE)) || [];
 
-      const currentUrl = windoiw.location.href;
+      const currentUrl = window.location.href;
 
       if (
         sequence.length === 0 ||
