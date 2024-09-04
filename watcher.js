@@ -118,6 +118,7 @@ async function luxiDataTracking() {
         deviceType: navigator.userAgent ?? "Unknown",
         referrer: document.referrer ?? "Unknown",
         timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+        resolution: `${window.screen.width}x${window.screen.height}`,
       });
       localStorage.setItem(STORAGE_KEYS.SESSION, sessionData);
     } catch (error) {}
