@@ -119,6 +119,8 @@ async function luxiDataTracking() {
         referrer: document.referrer ?? "Unknown",
         timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
         resolution: `${window.screen.width}x${window.screen.height}`,
+        startForm: 0,
+        submitForm: 0,
       });
       localStorage.setItem(STORAGE_KEYS.SESSION, sessionData);
     } catch (error) {}
@@ -252,7 +254,32 @@ async function luxiDataTracking() {
   }
 
   luxiUpdatePageSequence();
-  window.addEventListener("DOMContentLoaded", luxiUpdatePageSequence);
+
+  async function luxiUpdateFormActivity(type) {
+    try {
+      const sessionData = JSON.parse(
+        localStorage.getItem(STORAGE_KEYS.SESSION),
+      );
+      if (sessionData) {
+        sessionData[type] = 1;
+        localStorage.setItem(STORAGE_KEYS.SESSION, JSON.stringify(sessionData));
+      }
+    } catch (error) {}
+  }
+
+  document.addEventListener("DOMContentLoaded", () => {
+    const forms = document.querySelectorAll("form");
+
+    forms.forEach((form) => {
+      form.addEventListener("focusin", () => {
+        luxiUpdateFormActivity("startForm");
+      });
+
+      form.addEventListener("submit", () => {
+        luxiUpdateFormActivity("submitForm");
+      });
+    });
+  });
 
   document.addEventListener("mouseout", async (event) => {
     try {
