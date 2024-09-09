@@ -23,6 +23,8 @@ async function luxiDataTracking() {
 
   let luxiDataSentAlready = false;
   let lastLuxiferClickTime = 0;
+  let lastLuxiferClickX = -1;
+  let lastLuxiferClickY = -1;
 
   function luxiThrottle(fn, limit) {
     let lastCall = 0;
@@ -180,8 +182,15 @@ async function luxiDataTracking() {
   async function luxiHandleClickEvent(event) {
     try {
       const now = Date.now();
-      const frustration = now - lastLuxiferClickTime <= 300;
+      const frustration =
+        now - lastLuxiferClickTime <= 3000 &&
+        lastLuxiferClickX === event.pageX &&
+        lastLuxiferClickY === event.pageY;
+
       lastLuxiferClickTime = now;
+      lastLuxiferClickX = event.pageX;
+      lastLuxiferClickY = event.pageY;
+
       await luxiStoreEventCoordinates(
         event.pageX,
         event.pageY,
