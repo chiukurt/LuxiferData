@@ -89,5 +89,9 @@
     }
   }
 
-  document.addEventListener('DOMContentLoaded', () => matomoWaitForTracker());
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", () => matomoWaitForTracker());
+  } else {
+    matomoWaitForTracker();
+  }
 })();

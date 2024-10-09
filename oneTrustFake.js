@@ -89,20 +89,26 @@
     }
   }
 
-  document.addEventListener('DOMContentLoaded', function() {
+  function initFakeOneTrust() {
     function fakeOneTrustInit() {
       window.OnetrustActiveGroups = [matomoLuxiStatsCode];
     }
     function fakeOneTrustUpdate() {
-      var event = new CustomEvent('OneTrustGroupsUpdated', {
+      var event = new CustomEvent("OneTrustGroupsUpdated", {
         detail: {
-          updatedGroups: OnetrustActiveGroups
-        }
+          updatedGroups: OnetrustActiveGroups,
+        },
       });
       window.dispatchEvent(event);
     }
     matomoWaitForTracker();
-    setTimeout(fakeOneTrustInit, 250); 
-    setTimeout(fakeOneTrustUpdate, 1000); 
-  });
+    setTimeout(fakeOneTrustInit, 250);
+    setTimeout(fakeOneTrustUpdate, 1000);
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initFakeOneTrust);
+  } else {
+    initFakeOneTrust();
+  }
 })();
