@@ -1,4 +1,3 @@
-<script>
 (function(){
   if (typeof matomoLuxiSiteId === 'undefined' || typeof matomoLuxiStatsCode === 'undefined' || typeof matomoLuxiSampleSize === 'undefined') {
     return;
@@ -104,4 +103,3 @@
     setTimeout(fakeOneTrustUpdate, 1000); 
   });
 })();
-</script>

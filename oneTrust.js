@@ -1,4 +1,3 @@
-<script>
 (function(){
   if (typeof matomoLuxiSiteId === 'undefined' || typeof matomoLuxiStatsCode === 'undefined' || typeof matomoLuxiSampleSize === 'undefined') {
     return;
@@ -89,4 +88,3 @@
 
   document.addEventListener('DOMContentLoaded', () => matomoWaitForTracker());
 })();
-</script>
