@@ -33,7 +33,7 @@
   } else if (!luxiSample) {
     const sampleGroup = Math.floor(Math.random() * 100) + 1;
     setLuxiCookie('luxiSample', sampleGroup);
-    if (sampleGroup <= matomoLuxiSampleSize) { // Change the condition to less than 25
+    if (sampleGroup <= matomoLuxiSampleSize) {
       startTracking();
     }
   }
