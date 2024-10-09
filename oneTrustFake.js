@@ -65,22 +65,25 @@
       startMTM();
     }
 
-    if (OnetrustActiveGroups.includes(matomoLuxiStatsCode)) { 
-      _paq.push(['rememberCookieConsentGiven']);
-      _paq.push(['setConsentGiven']); 
-      const luxiSample = getLuxiCookie('luxiSample');
-      if (luxiSample && luxiSample <= matomoLuxiSampleSize) {
+    const inSample = (inputNum) =>
+      parseInt(inputNum, 10) <= parseInt(matomoLuxiSampleSize, 10);
+
+    if (OnetrustActiveGroups.includes(matomoLuxiStatsCode)) {
+      _paq.push(["rememberCookieConsentGiven"]);
+      _paq.push(["setConsentGiven"]);
+      const luxiSample = getLuxiCookie("luxiSample");
+      if (luxiSample && inSample(luxiSample)) {
         startTracking();
       } else if (!luxiSample) {
         const sampleGroup = Math.floor(Math.random() * 100) + 1;
-        setLuxiCookie('luxiSample', sampleGroup);
-        if (sampleGroup <= matomoLuxiSampleSize) {
+        setLuxiCookie("luxiSample", sampleGroup);
+        if (inSample(sampleGroup)) {
           startTracking();
         }
       }
     } else {
-      _paq.push(['forgetCookieConsentGiven']); 
-      _paq.push(['deleteCookies']);
+      _paq.push(["forgetCookieConsentGiven"]);
+      _paq.push(["deleteCookies"]);
       // Even if consent is revoked, the above two need to be sent to matomo
       startMatomo();
     }

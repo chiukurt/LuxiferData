@@ -41,13 +41,16 @@
     })();
   }
 
+  const inSample = (inputNum) =>
+    parseInt(inputNum, 10) <= parseInt(matomoLuxiSampleSize, 10);
+
   const luxiSample = getLuxiCookie("luxiSample");
-  if (luxiSample && luxiSample <= matomoLuxiSampleSize) {
+  if (luxiSample && inSample(luxiSample)) {
     startTracking();
   } else if (!luxiSample) {
     const sampleGroup = Math.floor(Math.random() * 100) + 1;
     setLuxiCookie("luxiSample", sampleGroup);
-    if (sampleGroup <= matomoLuxiSampleSize) {
+    if (inSample(sampleGroup)) {
       startTracking();
     }
   }
