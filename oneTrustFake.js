@@ -4,7 +4,6 @@
   }
   
   // Matomo init & always require cookie consent
-  var _paq = window._paq = window._paq || [];
   _paq.push(['requireCookieConsent']);
 
   var waitForTrackerCount = 0;
@@ -50,7 +49,6 @@
         const today = new Date();
         return `${today.getUTCFullYear()}-${pad(today.getUTCMonth() + 1)}-${pad(today.getUTCDate())}`;
       }
-      var _mtm = window._mtm = window._mtm || [];
       _mtm.push({'mtm.startTime': (new Date().getTime()), 'event': 'mtm.Start'});
       (function() {
         var d = document, g = d.createElement('script'), s = d.getElementsByTagName('script')[0];

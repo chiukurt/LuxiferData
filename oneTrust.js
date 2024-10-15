@@ -3,12 +3,13 @@
     return;
   }
 
-  var _paq = window._paq = window._paq || [];
   _paq.push(['requireConsent']);
-  _paq.push(['setTrackerUrl', 'https://northpnd.matomo.cloud/matomo.php']);
-  _paq.push(['setSiteId', matomoLuxiSiteId]);
-  var d = document, g = d.createElement('script'), s = d.getElementsByTagName('script')[0];
-  g.async = true; g.src = 'https://cdn.matomo.cloud/northpnd.matomo.cloud/matomo.js'; s.parentNode.insertBefore(g, s);
+  (function () {
+    _paq.push(['setTrackerUrl', 'https://northpnd.matomo.cloud/matomo.php']);
+    _paq.push(['setSiteId', matomoLuxiSiteId]);
+    var d = document, g = d.createElement('script'), s = d.getElementsByTagName('script')[0];
+    g.async = true; g.src = 'https://cdn.matomo.cloud/northpnd.matomo.cloud/matomo.js'; s.parentNode.insertBefore(g, s);
+  })();
 
   var waitForTrackerCount = 0;
   function matomoWaitForTracker() {
@@ -44,7 +45,6 @@
         const today = new Date();
         return `${today.getUTCFullYear()}-${pad(today.getUTCMonth() + 1)}-${pad(today.getUTCDate())}`;
       }
-      var _mtm = window._mtm = window._mtm || [];
       _mtm.push({'mtm.startTime': (new Date().getTime()), 'event': 'mtm.Start'});
       (function() {
         var d = document, g = d.createElement('script'), s = d.getElementsByTagName('script')[0];
@@ -62,8 +62,8 @@
       parseInt(inputNum, 10) <= parseInt(matomoLuxiSampleSize, 10);
 
     if (OnetrustActiveGroups.includes(matomoLuxiStatsCode)) {
-      _paq.push(["rememberConsentGiven"]);
       _paq.push(["setConsentGiven"]);
+      _paq.push(["rememberConsentGiven"]);
       let luxiSample = getLuxiCookie("luxiSample");
       if (!luxiSample) {
         luxiSample = Math.floor(Math.random() * 100) + 1;
