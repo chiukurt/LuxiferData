@@ -2,10 +2,13 @@
   if (typeof matomoLuxiSiteId === 'undefined' || typeof matomoLuxiStatsCode === 'undefined' || typeof matomoLuxiSampleSize === 'undefined') {
     return;
   }
-  
-  // Matomo init & always require cookie consent
+
   var _paq = window._paq = window._paq || [];
-  _paq.push(['requireCookieConsent']);
+  _paq.push(['requireConsent']);
+  _paq.push(['setTrackerUrl', 'https://northpnd.matomo.cloud/matomo.php']);
+  _paq.push(['setSiteId', matomoLuxiSiteId]);
+  var d = document, g = d.createElement('script'), s = d.getElementsByTagName('script')[0];
+  g.async = true; g.src = 'https://cdn.matomo.cloud/northpnd.matomo.cloud/matomo.js'; s.parentNode.insertBefore(g, s);
 
   var waitForTrackerCount = 0;
   function matomoWaitForTracker() {
@@ -35,15 +38,6 @@
       document.cookie = `${name}=${value};expires=${d.toUTCString()};path=/`;
     }
 
-    function startMatomo(){
-      (function() {
-        _paq.push(['setTrackerUrl', 'https://northpnd.matomo.cloud/matomo.php']);
-        _paq.push(['setSiteId', matomoLuxiSiteId]);
-        var d = document, g = d.createElement('script'), s = d.getElementsByTagName('script')[0];
-        g.async = true; g.src = 'https://cdn.matomo.cloud/northpnd.matomo.cloud/matomo.js'; s.parentNode.insertBefore(g, s);
-      })();
-    }
-
     function startMTM(){
       function todayParam() {
         const pad = (number) => (number < 10 ? '0' : '') + number;
@@ -61,7 +55,6 @@
     function startTracking(){
       _paq.push(['trackPageView']);
       _paq.push(['enableLinkTracking']);
-      startMatomo();
       startMTM();
     }
 
@@ -69,23 +62,19 @@
       parseInt(inputNum, 10) <= parseInt(matomoLuxiSampleSize, 10);
 
     if (OnetrustActiveGroups.includes(matomoLuxiStatsCode)) {
-      _paq.push(["rememberCookieConsentGiven"]);
+      _paq.push(["rememberConsentGiven"]);
       _paq.push(["setConsentGiven"]);
-      const luxiSample = getLuxiCookie("luxiSample");
-      if (luxiSample && inSample(luxiSample)) {
+      let luxiSample = getLuxiCookie("luxiSample");
+      if (!luxiSample) {
+        luxiSample = Math.floor(Math.random() * 100) + 1;
+        setLuxiCookie("luxiSample", luxiSample);
+      }
+      if (inSample(luxiSample)) { 
         startTracking();
-      } else if (!luxiSample) {
-        const sampleGroup = Math.floor(Math.random() * 100) + 1;
-        setLuxiCookie("luxiSample", sampleGroup);
-        if (inSample(sampleGroup)) {
-          startTracking();
-        }
       }
     } else {
-      _paq.push(["forgetCookieConsentGiven"]);
+      _paq.push(["forgetConsentGiven"]);
       _paq.push(["deleteCookies"]);
-      // Even if consent is revoked, the above two need to be sent to matomo
-      startMatomo();
     }
   }
 
