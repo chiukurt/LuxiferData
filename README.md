@@ -2,7 +2,7 @@
 
 Temporary repository for serving script via JsDelivr CDN.
 
-# Watcher.js
+# Watcher.js (outdated)
 
 Sends data to GCP endpoint for storing into Firestore database.
 
@@ -14,4 +14,6 @@ To identify a returning visitor, cookie storage is required.
 
 # Other files
 
-Use various matomo setups. File served depends on cookie consent tool.
+Use various matomo setups. File served depends on cookie consent tool. 
+
+Implements sampling to reduce data storage
