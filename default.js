@@ -5,10 +5,10 @@
 
   _paq.push(['requireConsent']);
   (function () {
-    _paq.push(['setTrackerUrl', 'https://northpnd.matomo.cloud/matomo.php']);
+    _paq.push(["setTrackerUrl", "https://analytics.luxifer.app/matomo.php"]);
     _paq.push(['setSiteId', matomoLuxiSiteId]);
     var d = document, g = d.createElement('script'), s = d.getElementsByTagName('script')[0];
-    g.async = true; g.src = 'https://cdn.matomo.cloud/northpnd.matomo.cloud/matomo.js'; s.parentNode.insertBefore(g, s);
+    g.async = true; g.src = 'https://analytics.luxifer.app/matomo.js'; s.parentNode.insertBefore(g, s);
   })();
 
   function startMTM(){
@@ -20,7 +20,7 @@
     _mtm.push({'mtm.startTime': (new Date().getTime()), 'event': 'mtm.Start'});
     (function() {
       var d = document, g = d.createElement('script'), s = d.getElementsByTagName('script')[0];
-      g.async = true; g.src = 'https://cdn.matomo.cloud/northpnd.matomo.cloud/container_orKRLPJg.js?d=' + todayParam(); s.parentNode.insertBefore(g, s);
+      g.async = true; g.src = 'https://analytics.luxifer.app/container_GLkS5pMb.js?d=' + todayParam(); s.parentNode.insertBefore(g, s);
     })();
   }
 
