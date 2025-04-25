@@ -7,8 +7,30 @@
   (function () {
     _paq.push(["setTrackerUrl", "https://analytics.luxifer.app/matomo.php"]);
     _paq.push(['setSiteId', matomoLuxiSiteId]);
-    var d = document, g = d.createElement('script'), s = d.getElementsByTagName('script')[0];
-    g.async = true; g.src = 'https://analytics.luxifer.app/matomo.js'; s.parentNode.insertBefore(g, s);
+    var d = document, g = d.createElement("script"), s = d.getElementsByTagName("script")[0];
+    g.async = true; g.src = "https://analytics.luxifer.app/matomo.js";
+
+    let loaded = false;
+
+    // g.onload = () => {
+    //   clearTimeout(timeout);
+    //   loaded = true;
+    // };
+
+    // g.onerror = () => {
+    //   clearTimeout(timeout);
+    //   document.documentElement.classList.remove('ab-test-loading');
+    // };
+
+    const timeout = setTimeout(() => {
+      if (!loaded) {
+        document.documentElement.classList.remove('ab-test-loading');
+        g.remove(); 
+        console.log("Loading took 5s");
+      }
+    }, 5000); 
+
+    s.parentNode.insertBefore(g, s);
   })();
 
   function startMTM(){
