@@ -12,21 +12,55 @@
 
     let loaded = false;
 
-    // g.onload = () => {
-    //   clearTimeout(timeout);
-    //   loaded = true;
-    // };
-
-    // g.onerror = () => {
-    //   clearTimeout(timeout);
-    //   document.documentElement.classList.remove('ab-test-loading');
-    // };
+    g.onload = () => {
+      clearTimeout(timeout);
+      loaded = true;
+      const tests = [
+        {
+          name: "Test_royod",
+          url: "https://chiukurt.github.io/",
+          type: "simple_text",
+          data: "AB Test alternate",
+        },
+      ];
+      tests.forEach((test) => {
+        const { name, url, type, data } = test;
+        _paq.push(["AbTesting::create", {
+            name: name,
+            includedTargets: [{ attribute: "url", type: "starts_with", value: url, inverted: "0" }],
+            excludedTargets: [],
+            variations: [
+              {
+                name: "original",
+                activate: function (event) {
+                  document.documentElement.classList.remove("ab-test-loading");
+                },
+              },
+              {
+                name: "test",
+                activate: function (event) {
+                  if (type === "simple_text") {
+                    document.getElementById("ab-element").innerText = data;
+                    document.documentElement.classList.remove("ab-test-loading");
+                  }
+                },
+              },
+            ],
+          },
+        ]);
+      });
+    };
+    
+    g.onerror = () => {
+      clearTimeout(timeout);
+      document.documentElement.classList.remove('ab-test-loading');
+    };
 
     const timeout = setTimeout(() => {
       if (!loaded) {
         document.documentElement.classList.remove('ab-test-loading');
         g.remove(); 
-        console.log("Loading took 5s");
+        console.log("Loading took 5, A/B test not loaded.");
       }
     }, 5000); 
 
