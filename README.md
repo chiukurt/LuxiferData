@@ -1,19 +1,15 @@
 # LuxiferData
 
-Temporary repository for serving script via JsDelivr CDN.
+Temporary repository for serving analytics script via JsDelivr CDN.
 
-# Watcher.js (outdated)
+# default.js
 
-Sends data to GCP endpoint for storing into Firestore database.
+Uses cookies to determine analytics participation.
 
-IP Address is needed to determine user city
+Expects matomoLuxiSiteId, matomoLuxiSampleSize, _mtm, _paq to be set.
 
-Country detection is done via timezone
+Simulates sync loading and blocks the page to load Matomo and Matomo tag manager scripts.
 
-To identify a returning visitor, cookie storage is required.
+Cancels loading if it takes over 300ms and unblocks the page.
 
-# Other files
-
-Use various matomo setups. File served depends on cookie consent tool. 
-
-Implements sampling to reduce data storage
+[Exhaustive list of collected analytics data](https://docs.google.com/document/d/1e4jBJxYswAGbP-nq-_3rbZiH5FqGUB7k3I6O-Yw08e0/edit?tab=t.0#heading=h.77fqjd243kyt)
