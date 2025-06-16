@@ -1,3 +1,4 @@
+
 (async function () {
   var luxiferAnalytics = "https://luxifer-analytics-cdn-fcbkengwhub0fdd9.z01.azurefd.net";
   var luxiferAbDataSource = "https://getabtestseu-573194387152.europe-west1.run.app";
@@ -9,6 +10,22 @@
     var tests = [];
     var testsLoaded = false;
     var matomoLoaded = false;
+
+    function normalizeUrl(u) {
+      try {
+        var parsed = new URL(u, window.location.origin);
+        var params = new URLSearchParams(parsed.search);
+        params.delete('pk_ab_test');
+        var sortedParams = new URLSearchParams();
+        Array.from(params.keys()).sort().forEach(key => {
+          sortedParams.set(key, params.get(key));
+        });
+        return parsed.pathname + (sortedParams.toString() ? '?' + sortedParams.toString() : '');
+      } catch (e) {
+        return u;
+      }
+    }
+
     function startABTest() { 
       if (!testsLoaded || !matomoLoaded) return;
       
@@ -21,6 +38,9 @@
 
       tests.forEach((test) => {
         var { name, url, type, data, selector, device } = test;
+        var currentUrl = normalizeUrl(window.location.pathname + window.location.search);
+        var testUrl = normalizeUrl(url);
+        if (currentUrl !== testUrl) return;
         _paq.push(["AbTesting::create", {
             name: name,
             trigger: () => {
