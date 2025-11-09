@@ -4,16 +4,17 @@ var _mtm = window._mtm = window._mtm || [];
 var _paq = window._paq = window._paq || [];
 _paq.push(['requireConsent']);
 
-function getLummmenCartEventData(cl) {
+function pushLummmenCartEvent(a, cl) {
   const m = cl.merchandise ?? {};
-  return JSON.stringify({
+  const p = {
     id: m.product?.id || "Unknown",
     title: m.product?.title || "Unknown",
     variant: m.title || "Unknown",
     type: m.product?.type || "Unknown",
     price: m.price?.amount || 0,
     count: cl.quantity || 1
-  });
+  };
+  window._paq.push(['trackEvent', 'Ecomm', a, JSON.stringify(p)]);
 }
 
 analytics.subscribe("checkout_completed", (event) => {
@@ -30,13 +31,11 @@ analytics.subscribe("checkout_completed", (event) => {
 });
 
 analytics.subscribe("product_added_to_cart", (event) => {
-  const payload = getLummmenCartEventData(event.data.cartLine);
-  window._paq.push(['trackEvent', 'Ecomm', 'AddToCart', payload]);
+  pushLummmenCartEvent('AddToCart', event.data.cartLine);
 });
 
 analytics.subscribe("product_removed_from_cart", (event) => {
-  const payload = getLummmenCartEventData(event.data.cartLine);
-  window._paq.push(['trackEvent', 'Ecomm', 'RemoveFromCart', payload]);
+  pushLummmenCartEvent('RemoveFromCart', event.data.cartLine);
 });
 
 analytics.subscribe("product_viewed", ({ data, context }) => {
