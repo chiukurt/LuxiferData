@@ -17,6 +17,7 @@
       var parsed = new URL(u, window.location.origin);
       var params = new URLSearchParams(parsed.search);
       params.delete('pk_ab_test');
+      params.delete('lummmen-ab-preview');
       var sortedParams = new URLSearchParams();
       Array.from(params.keys()).sort().forEach(key => {
         sortedParams.set(key, params.get(key));
@@ -587,8 +588,8 @@
         const items = data?.[type];
         if (!items) return;
         (Array.isArray(items) ? items : [items]).forEach(t => {
-          const currentUrl = normalizeUrl(window.location.pathname + window.location.search);
-          if (!t.url || currentUrl !== normalizeUrl(t.url)) return;
+          const currentUrl = window.location.pathname + window.location.search;
+          if (!t.url || normalizeUrl(currentUrl) !== normalizeUrl(t.url)) return;
 
           if (
             type === "permanent" &&
