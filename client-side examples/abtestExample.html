@@ -1,23 +1,59 @@
-
 <script>
-  var matomoLuxiSiteId = "1";
+  var matomoLuxiSiteId = "5";
   var matomoLuxiSampleSize = "100";
   var _mtm = window._mtm = window._mtm || [];
   var _paq = window._paq = window._paq || [];
-  var shouldLuxiAbTest = true;
-  document.documentElement.classList.add('luxi-ab-test-loading');
-  document.head.innerHTML += '<style>html.luxi-ab-test-loading{opacity:0}</style>';
-  var removeLuxiLoadingClass = () => document.documentElement.classList.remove("luxi-ab-test-loading");
-  var luxiAutoTimeout = setTimeout(() => {
-    removeLuxiLoadingClass();
-    if (!new URLSearchParams(window.location.search).has('pk_ab_test')) shouldLuxiAbTest = false;
-  }, 500); 
-  (function() {
-    var script = document.createElement('script');
-    script.src = "https://cdn.jsdelivr.net/gh/chiukurt/LuxiferData@1.3.01/abtest.min.js";
-    script.integrity = "sha384-+bUq7ecXBASRJS4Zn1KW1G67ehvfDo2by/ckama+veKn+g/zVPAmim+/bqa75ixv";
-    script.crossOrigin = "anonymous";
-    script.async = true;
-    document.head.appendChild(script);
+  (async function () {
+    document.documentElement.classList.add('lummmen-ab-test-loading');
+    document.head.innerHTML += '<style>html.lummmen-ab-test-loading{opacity:0 !important;}</style>';
+    const lummmenAbSource = "https://getabtestseu-573194387152.europe-west1.run.app";
+    const lummmenShowPage = () => {
+      window.__LUMMMEN_TOO_LATE__ = true;
+      document.documentElement.classList.remove("lummmen-ab-test-loading");
+    };
+    const REQUIRED = new Set(["tests", "analytics"]), store = {}, loaded = new Set(), resolvers = {}, keyPromises = {};
+    REQUIRED.forEach(k => keyPromises[k] = new Promise(resolve => resolvers[k] = resolve));
+    let resolveAll;
+    const allReady = new Promise(resolve => resolveAll = resolve);
+    const markReady = (k, v) => {
+      if (!REQUIRED.has(k) || loaded.has(k)) return;
+      store[k] = v; loaded.add(k); resolvers[k](v);
+      if (loaded.size === REQUIRED.size) resolveAll(store);
+    };
+    window.__LUMMMEN__ = { markReady, ready: allReady, when: k => keyPromises[k], get: k => store[k] };
+    (async () => {
+        const previewId = new URLSearchParams(location.search).get("lummmen-ab-preview");
+        const cacheKey = "lummmen-ab-tests";
+        let tests;
+        if (previewId) {
+          tests = await fetch(lummmenAbSource, {
+            method: "POST", headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ idSite: matomoLuxiSiteId, previewId })
+          }).then(r => r.json(), () => []);
+          sessionStorage.setItem(cacheKey, JSON.stringify(tests));
+        } else {
+          const cached = sessionStorage.getItem(cacheKey);
+          if (cached) {
+            tests = JSON.parse(cached);
+            console.log("[LUMMMEN] Loaded AB tests from cache:", performance.now() - startTime, "ms");
+          } else {
+            tests = await fetch(lummmenAbSource, {
+              method: "POST", headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ idSite: matomoLuxiSiteId })
+            }).then(r => r.json(), () => []);
+            sessionStorage.setItem(cacheKey, JSON.stringify(tests));
+          }
+        }
+        window.__LUMMMEN__.markReady("tests", tests);
+    })();
+    setTimeout(lummmenShowPage, 400);
+    (function() {
+      var script = document.createElement('script');
+      script.src = "https://cdn.jsdelivr.net/gh/chiukurt/LuxiferData@1.4.00/abtest.min.js";
+      script.integrity = "sha384-R6c+ZxgEg4FY+hObtItfK25Ec0c6kwePPMTuxfQ31XO8/lYw2IOpHTADC0xNAcC+";
+      script.crossOrigin = "anonymous";
+      script.async = true;
+      document.head.appendChild(script);
+    })();
   })();
 </script>
