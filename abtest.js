@@ -267,12 +267,74 @@
         });
       }
 
+      function inReferrerSegment(test) {
+        if (!test?.referrers?.length) return true;
+        const referrer = (document.referrer || "").trim();
+        const CAMPAIGN_KEYS = [
+          "utm_source",
+          "utm_medium",
+          "utm_campaign",
+          "utm_term",
+          "utm_content",
+          "utm_id",
+          "gclid",
+          "gbraid",
+          "wbraid",
+          "fbclid",
+          "msclkid",
+          "ttclid",
+          "li_fat_id",
+          "epik",
+          "scid",
+          "rdt_cid",
+        ];
+
+        function hasCampaignParams() {
+          try {
+            const qs = new URLSearchParams(window.location.search || "");
+            for (const k of CAMPAIGN_KEYS) {
+              if (qs.has(k)) return true;
+            }
+            return false;
+          } catch {
+            return false;
+          }
+        }
+
+        function isExternalReferrer() {
+          if (!referrer) return false;
+          try {
+            const r = new URL(referrer, window.location.href);
+            return r.origin !== window.location.origin;
+          } catch {
+            return true;
+          }
+        }
+
+        function isDirectTraffic() {
+          if (!referrer) return true;
+          try {
+            const r = new URL(referrer, window.location.href);
+            return r.origin === window.location.origin;
+          } catch {
+            return false;
+          }
+        }
+
+        const wanted = test.referrers;
+        if (wanted.includes("direct") && isDirectTraffic()) return true;
+        if (wanted.includes("external") && isExternalReferrer()) return true;
+        if (wanted.includes("campaign") && hasCampaignParams()) return true;
+        return false;
+      }
+
       const inDevice = inDeviceSegment(test);
       const inLanguage = inLanguageSegment(test);
       const inBrowser = inBrowserSegment(test);
       const inWeekday = inWeekdaySegment(test);
       const inHour = inHourSegment(test);
-      return inDevice && inLanguage && inBrowser && inWeekday && inHour;
+      const inReferrer = inReferrerSegment(test);
+      return inDevice && inLanguage && inBrowser && inWeekday && inHour && inReferrer;
     }
 
     const waitFor = (function createWaitFor() {
