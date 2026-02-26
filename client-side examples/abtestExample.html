@@ -35,7 +35,6 @@
           const cached = sessionStorage.getItem(cacheKey);
           if (cached) {
             tests = JSON.parse(cached);
-            console.log("[LUMMMEN] Loaded AB tests from cache:", performance.now() - startTime, "ms");
           } else {
             tests = await fetch(lummmenAbSource, {
               method: "POST", headers: { "Content-Type": "application/json" },
