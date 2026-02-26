@@ -587,6 +587,14 @@
         const items = data?.[type];
         if (!items) return;
         (Array.isArray(items) ? items : [items]).forEach(t => {
+          if (t.url) {
+            const currentUrl = normalizeUrl(window.location.pathname + window.location.search);
+            const testUrl = normalizeUrl(t.url);
+            if (currentUrl !== testUrl) return;
+          } else {
+            return;
+          }
+
           if (
             type === "permanent" &&
             typeof window.__LUMMMEN_AB__?.inSegment === "function" &&
