@@ -382,7 +382,11 @@
     }
 
     function getReferrerInfo() {
-      return readStoredReferrerInfo() || computeReferrerInfo();
+      const stored = readStoredReferrerInfo();
+      if (stored) return stored;
+      const current = computeReferrerInfo();
+      writeStoredReferrerInfo(current);
+      return current;
     }
 
     const waitFor = (function createWaitFor() {
