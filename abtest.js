@@ -176,8 +176,6 @@
       "dynsrc",
     ]);
 
-    const _AB_SAFE_ATTR_VALUE_RE = /^[a-z0-9_\-\s]+$/i;
-
     const _AB_BANNED_STYLE_PROPS = new Set([
       "background",
       "background-image",
@@ -333,7 +331,6 @@
 
     function computeReferrerInfo() {
       const referrer = (document.referrer || "").trim();
-
       const hasCampaignParams = (() => {
         try {
           const qs = new URLSearchParams(window.location.search || "");
@@ -536,6 +533,25 @@
     })();
 
     function sanitizeToFragment(html) {
+      const _AB_ATTR_VALUE_HAS_CONTROL_CHARS_RE = /[\u0000-\u001F\u007F]/;
+      const _AB_ATTR_VALUE_HAS_DANGEROUS_PUNCT_RE = /[<>"'`]/;
+
+      function isSafeAttrValue(value) {
+        if (value === null || value === undefined) return false;
+        const raw = String(value);
+        if (_AB_ATTR_VALUE_HAS_CONTROL_CHARS_RE.test(raw)) return false;
+        if (_AB_ATTR_VALUE_HAS_DANGEROUS_PUNCT_RE.test(raw)) return false;
+        const v = raw.trim();
+        if (!v) return false;
+        const collapsed = v.replace(/\s+/g, "").toLowerCase();
+        if (collapsed.startsWith("javascript:")) return false;
+        if (collapsed.startsWith("vbscript:")) return false;
+        if (collapsed.startsWith("data:")) return false;
+        if (collapsed.includes("expression(")) return false;
+        if (collapsed.includes("url(")) return false;
+        return true;
+      }
+      
       if (typeof html !== "string") return null;
 
       const tpl = _DocumentCreateElement("template");
@@ -551,11 +567,11 @@
 
         for (const attr of Array.from(el.attributes)) {
           const name = attr.name.toLowerCase();
-          const value = (attr.value || "").trim();
+          const value = attr.value;
 
           if (name.startsWith("on")) return null;
           if (_AB_BANNED_ATTRS.has(name)) return null;
-          if (!_AB_SAFE_ATTR_VALUE_RE.test(value)) return null;
+          if (!isSafeAttrValue(value)) return null;
         }
       }
 
