@@ -28,7 +28,7 @@
     }
   }
   
-  function starTracking() {
+  function startTracking() {
     try { window.__LUMMMEN_AB__?.initReferrerSession?.(); } catch {}
     _paq.push(['trackPageView']);
     _paq.push(['enableLinkTracking']);
@@ -742,6 +742,6 @@
   if (inSample(luxiSample) && !new URLSearchParams(location.search).has('lummmen-ab-preview')) { 
     _paq.push(["setConsentGiven"]);
     _paq.push(["rememberConsentGiven"]);
-    starTracking();
+    startTracking();
   }
 })();
