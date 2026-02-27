@@ -547,8 +547,6 @@
         if (collapsed.startsWith("javascript:")) return false;
         if (collapsed.startsWith("vbscript:")) return false;
         if (collapsed.startsWith("data:")) return false;
-        if (collapsed.includes("expression(")) return false;
-        if (collapsed.includes("url(")) return false;
         return true;
       }
       
