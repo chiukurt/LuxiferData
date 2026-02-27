@@ -29,6 +29,7 @@
   }
   
   function starTracking() {
+    try { window.__LUMMMEN_AB__?.initReferrerSession?.(); } catch {}
     _paq.push(['trackPageView']);
     _paq.push(['enableLinkTracking']);
     startMatomo();
@@ -269,62 +270,11 @@
 
       function inReferrerSegment(test) {
         if (!test?.referrers?.length) return true;
-        const referrer = (document.referrer || "").trim();
-        const CAMPAIGN_KEYS = [
-          "utm_source",
-          "utm_medium",
-          "utm_campaign",
-          "utm_term",
-          "utm_content",
-          "utm_id",
-          "gclid",
-          "gbraid",
-          "wbraid",
-          "fbclid",
-          "msclkid",
-          "ttclid",
-          "li_fat_id",
-          "epik",
-          "scid",
-          "rdt_cid",
-        ];
-
-        function hasCampaignParams() {
-          try {
-            const qs = new URLSearchParams(window.location.search || "");
-            for (const k of CAMPAIGN_KEYS) {
-              if (qs.has(k)) return true;
-            }
-            return false;
-          } catch {
-            return false;
-          }
-        }
-
-        function isExternalReferrer() {
-          if (!referrer) return false;
-          try {
-            const r = new URL(referrer, window.location.href);
-            return r.origin !== window.location.origin;
-          } catch {
-            return true;
-          }
-        }
-
-        function isDirectTraffic() {
-          if (!referrer) return true;
-          try {
-            const r = new URL(referrer, window.location.href);
-            return r.origin === window.location.origin;
-          } catch {
-            return false;
-          }
-        }
-
         const wanted = test.referrers;
-        if (wanted.includes("direct") && isDirectTraffic()) return true;
-        if (wanted.includes("external") && isExternalReferrer()) return true;
-        if (wanted.includes("campaign") && hasCampaignParams()) return true;
+        const effective = getReferrerInfo();
+        if (wanted.includes("direct") && effective.isDirectTraffic) return true;
+        if (wanted.includes("external") && effective.isExternalReferrer) return true;
+        if (wanted.includes("campaign") && effective.hasCampaignParams) return true;
         return false;
       }
 
@@ -335,6 +285,103 @@
       const inHour = inHourSegment(test);
       const inReferrer = inReferrerSegment(test);
       return inDevice && inLanguage && inBrowser && inWeekday && inHour && inReferrer;
+    }
+
+    const __AB_REFERRER_STORAGE_KEY = "lummmen-ab-referrer";
+
+    function safeJsonParse(s) {
+      try { return JSON.parse(s); } catch { return null; }
+    }
+
+    function readStoredReferrerInfo() {
+      try {
+        const raw = window.sessionStorage?.getItem(__AB_REFERRER_STORAGE_KEY);
+        if (!raw) return null;
+        const obj = safeJsonParse(raw);
+        if (!obj || typeof obj !== "object") return null;
+        return obj;
+      } catch {
+        return null;
+      }
+    }
+
+    function writeStoredReferrerInfo(obj) {
+      try {
+        if (!window.sessionStorage) return;
+        window.sessionStorage.setItem(__AB_REFERRER_STORAGE_KEY, JSON.stringify({ ...obj }));
+      } catch { }
+    }
+
+    function computeReferrerInfo() {
+      const referrer = (document.referrer || "").trim();
+      const CAMPAIGN_KEYS = [
+        "utm_source",
+        "utm_medium",
+        "utm_campaign",
+        "utm_term",
+        "utm_content",
+        "utm_id",
+        "gclid",
+        "gbraid",
+        "wbraid",
+        "fbclid",
+        "msclkid",
+        "ttclid",
+        "li_fat_id",
+        "epik",
+        "scid",
+        "rdt_cid",
+      ];
+
+      const hasCampaignParams = (() => {
+        try {
+          const qs = new URLSearchParams(window.location.search || "");
+          for (const k of CAMPAIGN_KEYS) {
+            if (qs.has(k)) return true;
+          }
+          return false;
+        } catch {
+          return false;
+        }
+      })();
+
+      const isExternalReferrer = (() => {
+        if (!referrer) return false;
+        try {
+          const r = new URL(referrer, window.location.href);
+          return r.origin !== window.location.origin;
+        } catch {
+          return true;
+        }
+      })();
+
+      const isDirectTraffic = (() => {
+        if (!referrer) return true;
+        try {
+          const r = new URL(referrer, window.location.href);
+          return r.origin === window.location.origin;
+        } catch {
+          return false;
+        }
+      })();
+
+      return {
+        hasCampaignParams,
+        isExternalReferrer,
+        isDirectTraffic,
+      };
+    }
+
+    function initReferrerSession() {
+      const stored = readStoredReferrerInfo();
+      if (stored) return stored;
+      const current = computeReferrerInfo();
+      writeStoredReferrerInfo(current);
+      return current;
+    }
+
+    function getReferrerInfo() {
+      return readStoredReferrerInfo() || computeReferrerInfo();
     }
 
     const waitFor = (function createWaitFor() {
@@ -628,6 +675,8 @@
       inSegment,
       waitFor,
       applyVariation,
+      initReferrerSession,
+      getReferrerInfo,
     });
 
     Object.defineProperty(window, "__LUMMMEN_AB__", {
