@@ -312,26 +312,27 @@
       } catch { }
     }
 
+    const CAMPAIGN_KEYS = [
+      "utm_source",
+      "utm_medium",
+      "utm_campaign",
+      "utm_term",
+      "utm_content",
+      "utm_id",
+      "gclid",
+      "gbraid",
+      "wbraid",
+      "fbclid",
+      "msclkid",
+      "ttclid",
+      "li_fat_id",
+      "epik",
+      "scid",
+      "rdt_cid",
+    ];
+
     function computeReferrerInfo() {
       const referrer = (document.referrer || "").trim();
-      const CAMPAIGN_KEYS = [
-        "utm_source",
-        "utm_medium",
-        "utm_campaign",
-        "utm_term",
-        "utm_content",
-        "utm_id",
-        "gclid",
-        "gbraid",
-        "wbraid",
-        "fbclid",
-        "msclkid",
-        "ttclid",
-        "li_fat_id",
-        "epik",
-        "scid",
-        "rdt_cid",
-      ];
 
       const hasCampaignParams = (() => {
         try {
