@@ -71,14 +71,14 @@
               name: "test",
               activate: async function (event) {
                 const ab = window.__LUMMMEN_AB__;
-                if (typeof ab?.waitFor !== "function") return;
+                if (typeof ab?.resolveReplacementTargets !== "function") return;
                 if (typeof ab?.applyVariation !== "function") return;
+                if (!Array.isArray(replacements)) return;
 
-                replacements.forEach((r) => {
-                  ab.waitFor(r.selector).then((node) => {
-                    if (node) ab.applyVariation(node, r);
-                  });
-                });
+                const targets = await ab.resolveReplacementTargets(replacements);
+                for (const { replacement, node } of targets) {
+                  if (node) await ab.applyVariation(node, replacement);
+                }
               },
             },
           ],
@@ -109,6 +109,7 @@
     const _ElementReplaceChildren = Element.prototype.replaceChildren;
     const _NodeAppendChild = Node.prototype.appendChild;
     const _NodeCloneNode = Node.prototype.cloneNode;
+    const _NodeInsertBefore = Node.prototype.insertBefore;
 
     const _URL = window.URL;
 
@@ -143,7 +144,6 @@
     ]);
 
     const _AB_BANNED_ATTRS = new Set([
-      "style",
       "href",
       "src",
       "xlink:href",
@@ -183,6 +183,36 @@
       "mask",
       "content",
       "cursor",
+    ]);
+
+    const _AB_ALLOWED_STYLES = new Set([
+      "color",
+      "background-color",
+      "font-size",
+      "font-weight",
+      "font-family",
+      "text-align",
+      "margin",
+      "margin-top",
+      "margin-right",
+      "margin-bottom",
+      "margin-left",
+      "padding",
+      "border",
+      "border-radius",
+      "width",
+      "height",
+      "max-width",
+      "min-width",
+      "display",
+      "flex",
+      "gap",
+      "justify-content",
+      "align-items",
+      "line-height",
+      "letter-spacing",
+      "text-transform",
+      "opacity",
     ]);
 
     const _AB_SAFE_STYLE_PROP_RE = /^[a-z][a-z0-9-]*$/i;
@@ -532,6 +562,56 @@
       };
     })();
 
+    function normalizeHtmlCssValueForScan(input) {
+      const s = String(input);
+      const noComments = s.replace(/\/\*[\s\S]*?\*\//g, "");
+      const deEscaped = noComments.replace(/\\\s*/g, "");
+      const collapsed = deEscaped.replace(/\s+/g, "");
+      return collapsed.toLowerCase();
+    }
+
+    function isSafeHtmlStyleProp(prop) {
+      return typeof prop === "string" &&
+        _AB_SAFE_STYLE_PROP_RE.test(prop) &&
+        _AB_ALLOWED_STYLES.has(prop.toLowerCase());
+    }
+
+    function isSafeHtmlStyleValue(val) {
+      if (val === null || val === undefined) return false;
+      const raw = String(val).trim();
+      if (!raw) return false;
+      if (/[<>"'`;\\]/.test(raw)) return false;
+
+      const scan = normalizeHtmlCssValueForScan(raw);
+      if (scan.includes("expression(")) return false;
+      if (scan.includes("javascript:")) return false;
+      if (scan.includes("vbscript:")) return false;
+      if (scan.includes("data:")) return false;
+      if (scan.includes("@import")) return false;
+      if (scan.includes("url(")) return false;
+      return true;
+    }
+
+    function sanitizeInlineStyle(styleText) {
+      if (typeof styleText !== "string") return null;
+      const declarations = styleText.split(";").map(d => d.trim()).filter(Boolean);
+      if (declarations.length === 0) return "";
+
+      const out = [];
+      for (const declaration of declarations) {
+        const separator = declaration.indexOf(":");
+        if (separator <= 0) return null;
+
+        const prop = declaration.slice(0, separator).trim().toLowerCase();
+        const value = declaration.slice(separator + 1).trim();
+        if (!isSafeHtmlStyleProp(prop)) return null;
+        if (!isSafeHtmlStyleValue(value)) return null;
+        out.push(`${prop}: ${value}`);
+      }
+
+      return out.join("; ");
+    }
+
     function sanitizeToFragment(html) {
       const _AB_ATTR_VALUE_HAS_CONTROL_CHARS_RE = /[\u0000-\u001F\u007F]/;
       const _AB_ATTR_VALUE_HAS_DANGEROUS_PUNCT_RE = /[<>"'`]/;
@@ -547,6 +627,8 @@
         if (collapsed.startsWith("javascript:")) return false;
         if (collapsed.startsWith("vbscript:")) return false;
         if (collapsed.startsWith("data:")) return false;
+        if (collapsed.includes("expression(")) return false;
+        if (collapsed.includes("url(")) return false;
         return true;
       }
       
@@ -569,6 +651,12 @@
 
           if (name.startsWith("on")) return null;
           if (_AB_BANNED_ATTRS.has(name)) return null;
+          if (name === "style") {
+            const sanitizedStyle = sanitizeInlineStyle(value);
+            if (!sanitizedStyle) return null;
+            el.setAttribute("style", sanitizedStyle);
+            continue;
+          }
           if (!isSafeAttrValue(value)) return null;
         }
       }
@@ -621,24 +709,48 @@
       return out;
     }
 
+    async function resolveReplacementTargets(replacements) {
+      if (!Array.isArray(replacements)) return [];
+
+      return Promise.all(replacements.map(async (replacement) => {
+        try {
+          if (!replacement || typeof replacement !== "object") return { replacement, node: null };
+          const node = await waitFor(replacement.selector);
+          return { replacement, node };
+        } catch {
+          return { replacement, node: null };
+        }
+      }));
+    }
+
     async function applyVariation(node, replacement) {
       if (!node) return;
       if (!replacement || typeof replacement !== "object") return;
 
       const tag = (node.tagName || "").toLowerCase();
-      const hasHtml = replacement.htmlReplacement !== undefined;
+      const htmlOperations = [
+        ["htmlReplacement", replacement.htmlReplacement],
+        ["htmlInsertBefore", replacement.htmlInsertBefore],
+        ["htmlInsertAfter", replacement.htmlInsertAfter],
+        ["htmlWrapWith", replacement.htmlWrapWith],
+      ].filter(([, value]) => typeof value === "string");
+      const hasHtml = htmlOperations.length > 0;
       const hasStyle = replacement.style !== undefined;
       const hasText = replacement.textContent !== undefined;
       const hasPlaceholder = replacement.placeholder !== undefined;
       const hasSrc = replacement.src !== undefined;
 
-      let sanitizedFrag = null;
+      const sanitizedHtml = {};
       let sanitizedStyle = null;
 
       if (hasHtml) {
         if (_AB_BANNED_HTML_REPLACE_TAGS.has(tag)) return;
-        sanitizedFrag = sanitizeToFragment(replacement.htmlReplacement);
-        if (!sanitizedFrag) return;
+
+        for (const [key, value] of htmlOperations) {
+          const sanitizedFrag = sanitizeToFragment(value);
+          if (!sanitizedFrag) return;
+          sanitizedHtml[key] = sanitizedFrag;
+        }
       }
 
       if (hasSrc) {
@@ -675,24 +787,44 @@
         if (typeof replacement.textContent !== "string" && typeof replacement.textContent !== "number") return;
       }
 
-      if (hasHtml) {
+      if (sanitizedHtml.htmlReplacement) {
         if (typeof _ElementReplaceChildren === "function") {
           _ElementReplaceChildren.call(node);
         } else {
           while (node.firstChild) node.removeChild(node.firstChild);
         }
-        _NodeAppendChild.call(node, _NodeCloneNode.call(sanitizedFrag, true));
+        _NodeAppendChild.call(node, _NodeCloneNode.call(sanitizedHtml.htmlReplacement, true));
+      }
+
+      if (sanitizedHtml.htmlInsertBefore && node.parentNode) {
+        _NodeInsertBefore.call(node.parentNode, _NodeCloneNode.call(sanitizedHtml.htmlInsertBefore, true), node);
+      }
+
+      if (sanitizedHtml.htmlInsertAfter && node.parentNode) {
+        _NodeInsertBefore.call(node.parentNode, _NodeCloneNode.call(sanitizedHtml.htmlInsertAfter, true), node.nextSibling);
+      }
+
+      if (sanitizedHtml.htmlWrapWith && node.parentNode) {
+        const wrapperFragment = _NodeCloneNode.call(sanitizedHtml.htmlWrapWith, true);
+        const wrapper = wrapperFragment.firstElementChild;
+        if (!wrapper || wrapperFragment.childElementCount !== 1) return;
+        _NodeInsertBefore.call(node.parentNode, wrapper, node);
+        _NodeAppendChild.call(wrapper, node);
       }
 
       if (hasStyle) Object.assign(node.style, sanitizedStyle);
       if (hasText) node.textContent = replacement.textContent;
       if (hasPlaceholder) node.placeholder = replacement.placeholder;
-      if (hasSrc) node.src = replacement.src.trim();
+      if (hasSrc) {
+        if (node.hasAttribute("srcset")) node.removeAttribute("srcset");
+        node.src = replacement.src.trim();
+      }
     }
 
     const api = Object.freeze({
       inSegment,
       waitFor,
+      resolveReplacementTargets,
       applyVariation,
       initReferrerSession,
       getReferrerInfo,
@@ -726,13 +858,11 @@
             typeof window.__LUMMMEN_AB__?.inSegment === "function" &&
             !window.__LUMMMEN_AB__.inSegment(t)
           ) return;
-          const promises = (t.replacements || []).map(r =>
-            window.__LUMMMEN_AB__.waitFor(r.selector).then(node => {
-              if (node) window.__LUMMMEN_AB__.applyVariation(node, r);
-            })
-          );
-
-          Promise.all(promises).then(() => {
+          window.__LUMMMEN_AB__.resolveReplacementTargets(t.replacements || []).then(async (targets) => {
+            for (const { replacement, node } of targets) {
+              if (node) await window.__LUMMMEN_AB__.applyVariation(node, replacement);
+            }
+          }).finally(() => {
             if (typeof lummmenShowPage === "function") lummmenShowPage();
           });
         });
