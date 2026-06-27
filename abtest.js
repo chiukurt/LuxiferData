@@ -22,7 +22,9 @@
       Array.from(params.keys()).sort().forEach(key => {
         sortedParams.set(key, params.get(key));
       });
-      return parsed.pathname + (sortedParams.toString() ? '?' + sortedParams.toString() : '');
+      var pathname = parsed.pathname;
+      if (pathname.endsWith('/')) pathname = pathname.slice(0, -1);
+      return pathname + (sortedParams.toString() ? '?' + sortedParams.toString() : '');
     } catch (e) {
       return u;
     }
@@ -43,7 +45,11 @@
     var d = document, g = d.createElement("script"), s = d.getElementsByTagName("script")[0];
     g.async = true; g.src = `${luxiferAnalytics}/matomo.js`;
     s.parentNode.insertBefore(g, s);
-    g.onload = () => { window.__LUMMMEN__.markReady("analytics", 200) };
+    g.onload = () => {
+      if (window.__LUMMMEN__ && typeof window.__LUMMMEN__.markReady === "function") {
+        window.__LUMMMEN__.markReady("analytics", 200);
+      }
+    };
   }
 
   function startAbTesting(testObjects) { 
@@ -198,6 +204,10 @@
       "margin-bottom",
       "margin-left",
       "padding",
+      "padding-top",
+      "padding-right",
+      "padding-bottom",
+      "padding-left",
       "border",
       "border-radius",
       "width",
@@ -612,7 +622,9 @@
       return out.join("; ");
     }
 
-    function sanitizeToFragment(html) {
+    function sanitizeToFragment(html, options) {
+      const bannedTags = options?.bannedTags || null;
+      // eslint-disable-next-line no-control-regex
       const _AB_ATTR_VALUE_HAS_CONTROL_CHARS_RE = /[\u0000-\u001F\u007F]/;
       const _AB_ATTR_VALUE_HAS_DANGEROUS_PUNCT_RE = /[<>"'`]/;
 
@@ -643,7 +655,7 @@
       while (walker.nextNode()) {
         const el = walker.currentNode;
         const tag = (el.tagName || "").toLowerCase();
-        if (_AB_BANNED_HTML_REPLACE_TAGS.has(tag)) return null;
+        if (bannedTags?.has(tag)) return null;
 
         for (const attr of Array.from(el.attributes)) {
           const name = attr.name.toLowerCase();
@@ -744,10 +756,13 @@
       let sanitizedStyle = null;
 
       if (hasHtml) {
-        if (_AB_BANNED_HTML_REPLACE_TAGS.has(tag)) return;
-
         for (const [key, value] of htmlOperations) {
-          const sanitizedFrag = sanitizeToFragment(value);
+          if (key === "htmlReplacement" && _AB_BANNED_HTML_REPLACE_TAGS.has(tag)) return;
+
+          const sanitizeOptions = key === "htmlReplacement"
+            ? { bannedTags: _AB_BANNED_HTML_REPLACE_TAGS }
+            : undefined;
+          const sanitizedFrag = sanitizeToFragment(value, sanitizeOptions);
           if (!sanitizedFrag) return;
           sanitizedHtml[key] = sanitizedFrag;
         }

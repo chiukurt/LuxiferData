@@ -5,7 +5,9 @@
   var _paq = window._paq = window._paq || [];
   (async function () {
     document.documentElement.classList.add('lummmen-ab-test-loading');
-    document.head.innerHTML += '<style>html.lummmen-ab-test-loading{opacity:0 !important;}</style>';
+    const lummmenStyleEl = document.createElement('style');
+    lummmenStyleEl.textContent = 'html.lummmen-ab-test-loading{opacity:0 !important;}';
+    document.head.appendChild(lummmenStyleEl);
     const lummmenAbSource = "https://getabtestseu-573194387152.europe-west1.run.app";
     const lummmenShowPage = () => {
       window.__LUMMMEN_TOO_LATE__ = true;
@@ -34,7 +36,7 @@
         } else {
           const cached = sessionStorage.getItem(cacheKey);
           if (cached) {
-            tests = JSON.parse(cached);
+            try { tests = JSON.parse(cached); } catch { tests = undefined; }
           } else {
             tests = await fetch(lummmenAbSource, {
               method: "POST", headers: { "Content-Type": "application/json" },
