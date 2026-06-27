@@ -856,7 +856,7 @@
   const getLuxiCookie = n => { const parts = `; ${document.cookie}`.split(`; ${n}=`); return parts.length === 2 ? parts[1].split(';').shift() : undefined; };
   const setLuxiCookie = (n, v) => document.cookie = `${n}=${v};expires=${new Date(Date.now() + 365*24*60*60*1000).toUTCString()};path=/`;
   const inSample = (inputNum) => parseInt(inputNum, 10) <= parseInt(matomoLuxiSampleSize, 10);
-  const luxiferAnalytics = "https://luxifer-analytics-cdn-fcbkengwhub0fdd9.z01.azurefd.net";
+  const luxiferAnalytics = "https://analytics.luxifer.app";
   if (typeof matomoLuxiSiteId === 'undefined' || typeof matomoLuxiSampleSize === 'undefined') return;
 
   window.__LUMMMEN__.when("tests").then((data) => {
