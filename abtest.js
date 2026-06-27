@@ -622,7 +622,9 @@
       return out.join("; ");
     }
 
-    function sanitizeToFragment(html) {
+    function sanitizeToFragment(html, options) {
+      const bannedTags = options?.bannedTags || null;
+      // eslint-disable-next-line no-control-regex
       const _AB_ATTR_VALUE_HAS_CONTROL_CHARS_RE = /[\u0000-\u001F\u007F]/;
       const _AB_ATTR_VALUE_HAS_DANGEROUS_PUNCT_RE = /[<>"'`]/;
 
@@ -653,7 +655,7 @@
       while (walker.nextNode()) {
         const el = walker.currentNode;
         const tag = (el.tagName || "").toLowerCase();
-        if (_AB_BANNED_HTML_REPLACE_TAGS.has(tag)) return null;
+        if (bannedTags?.has(tag)) return null;
 
         for (const attr of Array.from(el.attributes)) {
           const name = attr.name.toLowerCase();
