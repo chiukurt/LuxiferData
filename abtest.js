@@ -19,10 +19,12 @@
       params.delete('pk_ab_test');
       params.delete('lummmen-ab-preview');
       var sortedParams = new URLSearchParams();
-      Array.from(params.keys()).sort().forEach(key => {
+        Array.from(params.keys()).sort().forEach(key => {
         sortedParams.set(key, params.get(key));
       });
-      return parsed.pathname + (sortedParams.toString() ? '?' + sortedParams.toString() : '');
+      var pathname = parsed.pathname;
+      if (pathname.endsWith('/')) pathname = pathname.slice(0, -1);
+      return pathname + (sortedParams.toString() ? '?' + sortedParams.toString() : '');
     } catch (e) {
       return u;
     }
