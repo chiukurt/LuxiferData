@@ -34,7 +34,7 @@
         } else {
           const cached = sessionStorage.getItem(cacheKey);
           if (cached) {
-            tests = JSON.parse(cached);
+            try { tests = JSON.parse(cached); } catch { tests = undefined; }
           } else {
             tests = await fetch(lummmenAbSource, {
               method: "POST", headers: { "Content-Type": "application/json" },
