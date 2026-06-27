@@ -746,10 +746,13 @@
       let sanitizedStyle = null;
 
       if (hasHtml) {
-        if (_AB_BANNED_HTML_REPLACE_TAGS.has(tag)) return;
-
         for (const [key, value] of htmlOperations) {
-          const sanitizedFrag = sanitizeToFragment(value);
+          if (key === "htmlReplacement" && _AB_BANNED_HTML_REPLACE_TAGS.has(tag)) return;
+
+          const sanitizeOptions = key === "htmlReplacement"
+            ? { bannedTags: _AB_BANNED_HTML_REPLACE_TAGS }
+            : undefined;
+          const sanitizedFrag = sanitizeToFragment(value, sanitizeOptions);
           if (!sanitizedFrag) return;
           sanitizedHtml[key] = sanitizedFrag;
         }
