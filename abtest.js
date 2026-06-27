@@ -45,7 +45,11 @@
     var d = document, g = d.createElement("script"), s = d.getElementsByTagName("script")[0];
     g.async = true; g.src = `${luxiferAnalytics}/matomo.js`;
     s.parentNode.insertBefore(g, s);
-    g.onload = () => { window.__LUMMMEN__.markReady("analytics", 200) };
+    g.onload = () => {
+      if (window.__LUMMMEN__ && typeof window.__LUMMMEN__.markReady === "function") {
+        window.__LUMMMEN__.markReady("analytics", 200);
+      }
+    };
   }
 
   function startAbTesting(testObjects) { 
