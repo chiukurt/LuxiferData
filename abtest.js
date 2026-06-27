@@ -19,7 +19,7 @@
       params.delete('pk_ab_test');
       params.delete('lummmen-ab-preview');
       var sortedParams = new URLSearchParams();
-        Array.from(params.keys()).sort().forEach(key => {
+      Array.from(params.keys()).sort().forEach(key => {
         sortedParams.set(key, params.get(key));
       });
       var pathname = parsed.pathname;
