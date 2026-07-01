@@ -120,7 +120,6 @@
     const _URL = window.URL;
 
     const _AB_BANNED_HTML_REPLACE_TAGS = new Set([
-      "a",
       "input",
       "textarea",
       "button",
@@ -150,7 +149,6 @@
     ]);
 
     const _AB_BANNED_ATTRS = new Set([
-      "href",
       "src",
       "xlink:href",
       "formaction",
@@ -622,6 +620,28 @@
       return out.join("; ");
     }
 
+    function getRootDomain(url) {
+      const parts = url.hostname.toLowerCase().split(".").filter(Boolean);
+      return parts.length > 1 ? parts.slice(-2).join(".") : url.hostname.toLowerCase();
+    }
+
+    function sanitizeHref(value) {
+      if (typeof value !== "string") return null;
+      const raw = value.trim();
+      if (!raw) return null;
+      if (!_URL) return null;
+      try {
+        const url = new _URL(raw);
+        const currentUrl = new _URL(window.location.href);
+        if (!["http:", "https:"].includes(url.protocol)) return null;
+        if (url.search) return null;
+        if (getRootDomain(url) !== getRootDomain(currentUrl)) return null;
+        return url.href;
+      } catch {
+        return null;
+      }
+    }
+
     function sanitizeToFragment(html, options) {
       const bannedTags = options?.bannedTags || null;
       // eslint-disable-next-line no-control-regex
@@ -662,6 +682,13 @@
           const value = attr.value;
 
           if (name.startsWith("on")) return null;
+          if (name === "href") {
+            if (tag !== "a") return null;
+            const sanitizedHref = sanitizeHref(value);
+            if (!sanitizedHref) return null;
+            el.setAttribute("href", sanitizedHref);
+            continue;
+          }
           if (_AB_BANNED_ATTRS.has(name)) return null;
           if (name === "style") {
             const sanitizedStyle = sanitizeInlineStyle(value);
@@ -751,9 +778,11 @@
       const hasText = replacement.textContent !== undefined;
       const hasPlaceholder = replacement.placeholder !== undefined;
       const hasSrc = replacement.src !== undefined;
+      const hasHref = replacement.href !== undefined;
 
       const sanitizedHtml = {};
       let sanitizedStyle = null;
+      let sanitizedHref = null;
 
       if (hasHtml) {
         for (const [key, value] of htmlOperations) {
@@ -786,6 +815,12 @@
         } catch {
           return;
         }
+      }
+
+      if (hasHref) {
+        if (tag !== "a") return;
+        sanitizedHref = sanitizeHref(replacement.href);
+        if (!sanitizedHref) return;
       }
 
       if (hasStyle) {
@@ -834,6 +869,7 @@
         if (node.hasAttribute("srcset")) node.removeAttribute("srcset");
         node.src = replacement.src.trim();
       }
+      if (hasHref) node.href = sanitizedHref;
     }
 
     const api = Object.freeze({
