@@ -620,9 +620,16 @@
       return out.join("; ");
     }
 
-    function getRootDomain(url) {
-      const parts = url.hostname.toLowerCase().split(".").filter(Boolean);
-      return parts.length > 1 ? parts.slice(-2).join(".") : url.hostname.toLowerCase();
+    function normalizeHostname(url) {
+      return url.hostname.toLowerCase().replace(/\.$/, "");
+    }
+
+    function isSameHostOrSubdomain(url, currentUrl) {
+      const host = normalizeHostname(url);
+      const currentHost = normalizeHostname(currentUrl);
+      return host === currentHost ||
+        host.endsWith("." + currentHost) ||
+        currentHost.endsWith("." + host);
     }
 
     function sanitizeHref(value) {
@@ -635,7 +642,8 @@
         const currentUrl = new _URL(window.location.href);
         if (!["http:", "https:"].includes(url.protocol)) return null;
         if (url.search) return null;
-        if (getRootDomain(url) !== getRootDomain(currentUrl)) return null;
+        if (url.hash) return null;
+        if (!isSameHostOrSubdomain(url, currentUrl)) return null;
         return url.href;
       } catch {
         return null;
