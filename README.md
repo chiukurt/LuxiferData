@@ -1,3 +1,6 @@
+# This repository is outdated.
+For further updates, see src/getlummmenanalytics in the [cloud-luxifer](https://github.com/chiukurt/cloud-luxifer) repo
+
 # LuxiferData
 
 Temporary repository for serving analytics script via JsDelivr CDN.
